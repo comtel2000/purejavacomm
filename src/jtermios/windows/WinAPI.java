@@ -30,11 +30,18 @@
 
 package jtermios.windows;
 
-import java.nio.ByteBuffer;
+import static jtermios.JTermios.JTermiosLogging.log;
+import static jtermios.JTermios.JTermiosLogging.ref;
 
-import com.sun.jna.*;
+import com.sun.jna.FromNativeContext;
+import com.sun.jna.IntegerType;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.PointerType;
+import com.sun.jna.Structure;
+import com.sun.jna.WString;
 import com.sun.jna.ptr.IntByReference;
-import static jtermios.JTermios.JTermiosLogging.*;
 
 /**
  * This WinAPI class implements a simple wrapper API to access the Windows COM
@@ -91,7 +98,6 @@ import static jtermios.JTermios.JTermiosLogging.*;
 
 public class WinAPI {
 	static Windows_kernel32_lib m_K32lib = (Windows_kernel32_lib) Native.loadLibrary("kernel32", Windows_kernel32_lib.class);
-	private static boolean TRACE = true;
 
 	public static class HANDLE extends PointerType {
 		private boolean immutable;
@@ -321,6 +327,9 @@ public class WinAPI {
 	}
 
 	public static class ULONG_PTR extends IntegerType {
+
+		private static final long serialVersionUID = 1L;
+
 		public ULONG_PTR() {
 			this(0);
 		}
@@ -361,7 +370,7 @@ public class WinAPI {
 	 * 
 	 */
 	public static class OVERLAPPED extends Structure {
-		private static boolean TRACE;
+
 		public ULONG_PTR Internal;
 		public ULONG_PTR InternalHigh;
 		public int Offset;
@@ -369,20 +378,32 @@ public class WinAPI {
 		public HANDLE hEvent;
 
 		public OVERLAPPED() {
+			setFieldOrder(new String[] { "Internal", "InternalHigh", "Offset", "OffsetHigh", "hEvent" });
 			setAutoSynch(false);
 		}
 	}
 
 	public static class SECURITY_ATTRIBUTES extends Structure {
+		public SECURITY_ATTRIBUTES() {
+			setFieldOrder(new String[] { "nLength", "lpSecurityDescriptor", "bInheritHandle" });
+		}
+
 		public int nLength;
 		public Pointer lpSecurityDescriptor;
 		public boolean bInheritHandle;
 	}
 
 	public static class DCB extends Structure {
+
+		public DCB() {
+			setFieldOrder(new String[] { "DCBlength", "BaudRate", "fFlags", "wReserved", "XonLim", "XoffLim", "ByteSize", "Parity", "StopBits", "XonChar",
+					"XoffChar", "ErrorChar", "EofChar", "EvtChar", "wReserved1" });
+		}
+
 		public int DCBlength;
 		public int BaudRate;
-		public int fFlags; // No bit field mapping in JNA so define a flags field and masks for fFlags
+		public int fFlags; // No bit field mapping in JNA so define a flags
+							// field and masks for fFlags
 		public static final int fBinary = 0x00000001;
 		public static final int fParity = 0x00000002;
 		public static final int fOutxCtsFlow = 0x00000004;
@@ -412,6 +433,12 @@ public class WinAPI {
 	};
 
 	public static class COMMTIMEOUTS extends Structure {
+
+		public COMMTIMEOUTS() {
+			setFieldOrder(new String[] { "ReadIntervalTimeout", "ReadTotalTimeoutMultiplier", "ReadTotalTimeoutConstant", "WriteTotalTimeoutMultiplier",
+					"WriteTotalTimeoutConstant" });
+		}
+
 		public int ReadIntervalTimeout;
 		public int ReadTotalTimeoutMultiplier;
 		public int ReadTotalTimeoutConstant;
@@ -420,6 +447,11 @@ public class WinAPI {
 	};
 
 	public static class COMSTAT extends Structure {
+
+		public COMSTAT() {
+			setFieldOrder(new String[] { "fFlags", "cbInQue", "cbOutQue" });
+		}
+
 		public int fFlags;
 		public static final int fCtsHold = 0x00000001;
 		public static final int fDsrHold = 0x00000002;
@@ -654,7 +686,8 @@ public class WinAPI {
 		return res;
 	}
 
-	// FIXME investigate why defining this as QueryDosDeviceW(WString name, Memory buffer, int bsize)
+	// FIXME investigate why defining this as QueryDosDeviceW(WString name,
+	// Memory buffer, int bsize)
 	// later crashes JVM
 	static public int QueryDosDeviceW(WString name, char[] buffer, int bsize) {
 		log = log && log(5, "> QueryDosDeviceW(%s,%s,%d)\n", name, buffer, bsize);

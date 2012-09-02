@@ -48,7 +48,7 @@ public class JTermiosDemo {
 	public static void main(String[] args) {
 		System.out.println("JTermio simple loopback demo");
 		List<String> portlist = getPortList();
-		String port = "COM5:";
+		String port = "COM12:";
 		for (String pname : portlist) {
 			System.out.println("Found port " + pname);
 			port = pname;
