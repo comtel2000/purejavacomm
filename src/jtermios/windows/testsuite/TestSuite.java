@@ -73,7 +73,7 @@ public class TestSuite {
 	public void test1() {
 		System.out.println("A contorted loopback test with overlapped IO for WinAPI");
 
-		String COM = "COM10:";
+		String COM = "COM10";
 		HANDLE hComm = CreateFileA(COM, GENERIC_READ | GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, null);
 
 		check(SetupComm(hComm, 2048, 2048), "SetupComm ");
