@@ -33,6 +33,8 @@ package purejavacomm;
 import java.util.EventObject;
 
 public class SerialPortEvent extends EventObject {
+
+	private static final long serialVersionUID = 7399584074192104040L;
 	/**
 	 * Data available at the serial port.
 	 */

@@ -220,8 +220,6 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	private volatile Hashtable<Integer, Port> m_OpenPorts = new Hashtable<Integer, Port>();
 
-	
-	
 	private class Port {
 		volatile int m_FD = -1;
 		volatile boolean m_Locked;
@@ -255,7 +253,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		synchronized public void fail() throws Fail {
 			int err = GetLastError();
 			Memory buffer = new Memory(2048);
-			int res = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer, (int) buffer.size(), null);
+			int res = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, null, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer,
+					(int) buffer.size(), null);
 
 			log = log && log(1, "fail() %s, Windows GetLastError()= %d, %s\n", lineno(1), err, buffer.getString(0, true));
 
@@ -315,7 +314,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 					if (!PurgeComm(m_Comm, PURGE_TXABORT + PURGE_TXCLEAR + PURGE_RXABORT + PURGE_RXCLEAR))
 						log = log && log(1, "PurgeComm() failed, GetLastError()= %d, %s\n", GetLastError(), lineno(1));
 
-				HANDLE h; /// 'hEvent' might never have been 'read' so read it to this var first
+				HANDLE h; // / 'hEvent' might never have been 'read' so read it
+							// to this var first
 
 				synchronized (m_RdBuffer) {
 					h = (HANDLE) m_RdOVL.readField("hEvent");
@@ -332,7 +332,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						CloseHandle(h);
 				}
 
-				// Ensure that select() is through before releasing the m_SelOVL 
+				// Ensure that select() is through before releasing the m_SelOVL
 				waitUnlock();
 
 				h = (HANDLE) m_SelOVL.readField("hEvent");
@@ -354,7 +354,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	static private class FDSetImpl extends FDSet {
-		static final int FD_SET_SIZE = 256; // Windows supports max 255 serial ports so this is enough
+		static final int FD_SET_SIZE = 256; // Windows supports max 255 serial
+											// ports so this is enough
 		static final int NFBBITS = 32;
 		int[] bits = new int[(FD_SET_SIZE + NFBBITS - 1) / NFBBITS];
 	}
@@ -586,7 +587,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				if (!ResetEvent(port.m_WrOVL.hEvent))
 					port.fail();
 
-				port.m_WrBuffer.write(0, buffer, 0, length); // copy from buffer to Memory
+				port.m_WrBuffer.write(0, buffer, 0, length); // copy from buffer
+																// to Memory
 				boolean ok = WriteFile(port.m_Comm, port.m_WrBuffer, length, port.m_WrN, port.m_WrOVL);
 
 				if (!ok) {
@@ -702,7 +704,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 	}
 
-	//FIXME this needs serious code review from people who know this stuff...
+	// FIXME this needs serious code review from people who know this stuff...
 	public int updateFromTermios(Port port) throws Fail {
 		Termios tios = port.m_Termios;
 		DCB dcb = port.m_DCB;
@@ -714,7 +716,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		int c_iflag = tios.c_iflag;
 		int c_oflag = tios.c_oflag;
 		int flags = 0;
-		// rxtx does: 	if ( s_termios->c_iflag & ISTRIP ) dcb.fBinary = FALSE; but Winapi doc says fBinary always true
+		// rxtx does: if ( s_termios->c_iflag & ISTRIP ) dcb.fBinary = FALSE;
+		// but Winapi doc says fBinary always true
 		flags |= fBinary;
 		if ((c_cflag & PARENB) != 0)
 			flags |= fParity;
@@ -733,15 +736,16 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		}
 
 		// Following have no corresponding functionality in unix termios
-		//fOutxDsrFlow = 0x00000008;
-		//fDtrControl = 0x00000030;
-		//fDsrSensitivity = 0x00000040;
-		//fErrorChar = 0x00000400;
-		//fNull = 0x00000800;
-		//fAbortOnError = 0x00004000;
-		//fDummy2 = 0xFFFF8000;
+		// fOutxDsrFlow = 0x00000008;
+		// fDtrControl = 0x00000030;
+		// fDsrSensitivity = 0x00000040;
+		// fErrorChar = 0x00000400;
+		// fNull = 0x00000800;
+		// fAbortOnError = 0x00004000;
+		// fDummy2 = 0xFFFF8000;
 		dcb.fFlags = flags;
-		dcb.XonLim = 128; // rxtx sets there to 0 but Windows API doc says must not be 0
+		dcb.XonLim = 128; // rxtx sets there to 0 but Windows API doc says must
+							// not be 0
 		dcb.XoffLim = 128;
 		byte cs = 8;
 		int csize = c_cflag & CSIZE;
@@ -772,11 +776,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		dcb.XoffChar = tios.c_cc[VSTOP];
 		dcb.ErrorChar = 0;
 
-		// rxtx has some thing like 
-		// if ( EV_BREAK|EV_CTS|EV_DSR|EV_ERR|EV_RING | ( EV_RLSD & EV_RXFLAG ) )
-		//	dcb.EvtChar = '\n';
-		//else
-		//	dcb.EvtChar = '\0';
+		// rxtx has some thing like
+		// if ( EV_BREAK|EV_CTS|EV_DSR|EV_ERR|EV_RING | ( EV_RLSD & EV_RXFLAG )
+		// )
+		// dcb.EvtChar = '\n';
+		// else
+		// dcb.EvtChar = '\0';
 		// But those are all defines so there is something fishy there?
 
 		dcb.EvtChar = '\n';
@@ -875,7 +880,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 								if (!SetCommMask(port.m_Comm, flags))
 									port.fail();
 								if (WaitCommEvent(port.m_Comm, port.m_EvenFlags, port.m_SelOVL)) {
-									// actually it seems that overlapped WaitCommEvent never returns true so we never get here
+									// actually it seems that overlapped
+									// WaitCommEvent never returns true so we
+									// never get here
 									clearCommErrors(port);
 									if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
 										maskToFDSets(port, readfds, writefds, exceptfds);
@@ -888,7 +895,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 									waiting.add(port);
 								}
 							} catch (InterruptedException ie) {
-								m_ErrNo = 777; // FIXME figure out the proper unit
+								m_ErrNo = 777; // FIXME figure out the proper
+												// unit
 												// error code
 								return -1;
 							}
@@ -902,11 +910,12 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 						for (Port port : waiting)
 							wobj[i++] = port.m_SelOVL.hEvent;
 						int tout = timeout != null ? (int) (timeout.tv_sec * 1000 + timeout.tv_usec / 1000) : INFINITE;
-						//int res = WaitForSingleObject(wobj[0], tout);
+						// int res = WaitForSingleObject(wobj[0], tout);
 						int res = WaitForMultipleObjects(waitn, wobj, false, tout);
 
 						if (res == WAIT_TIMEOUT) {
-							// work around the fact that sometimes we miss events
+							// work around the fact that sometimes we miss
+							// events
 							for (Port port : waiting) {
 								clearCommErrors(port);
 								int[] mask = { 0 };
@@ -935,7 +944,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 							if (!GetOverlappedResult(port.m_Comm, port.m_SelOVL, port.m_SelN, false))
 								port.fail();
 
-							// following checking is needed because EV_RXCHAR can be set even if nothing is available for reading
+							// following checking is needed because EV_RXCHAR
+							// can be set even if nothing is available for
+							// reading
 							clearCommErrors(port);
 							if (!(((port.m_EvenFlags.getValue() & EV_RXCHAR) != 0) && port.m_ClearStat.cbInQue == 0)) {
 								maskToFDSets(port, readfds, writefds, exceptfds);
@@ -979,37 +990,37 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	// values ie the values are the baudrates.
 	private static int baudToDCB(int baud) {
 		switch (baud) {
-			case 110:
-				return CBR_110;
-			case 300:
-				return CBR_300;
-			case 600:
-				return CBR_600;
-			case 1200:
-				return CBR_1200;
-			case 2400:
-				return CBR_2400;
-			case 4800:
-				return CBR_4800;
-			case 9600:
-				return CBR_9600;
-			case 14400:
-				return CBR_14400;
-			case 19200:
-				return CBR_19200;
-			case 38400:
-				return CBR_38400;
-			case 57600:
-				return CBR_57600;
-			case 115200:
-				return CBR_115200;
-			case 128000:
-				return CBR_128000;
-			case 256000:
-				return CBR_256000;
+		case 110:
+			return CBR_110;
+		case 300:
+			return CBR_300;
+		case 600:
+			return CBR_600;
+		case 1200:
+			return CBR_1200;
+		case 2400:
+			return CBR_2400;
+		case 4800:
+			return CBR_4800;
+		case 9600:
+			return CBR_9600;
+		case 14400:
+			return CBR_14400;
+		case 19200:
+			return CBR_19200;
+		case 38400:
+			return CBR_38400;
+		case 57600:
+			return CBR_57600;
+		case 115200:
+			return CBR_115200;
+		case 128000:
+			return CBR_128000;
+		case 256000:
+			return CBR_256000;
 
-			default:
-				return baud;
+		default:
+			return baud;
 		}
 	}
 
@@ -1188,72 +1199,72 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public int setspeed(int fd, Termios termios, int speed) {
 		int br = speed;
 		switch (speed) {
-			case 50:
-				br = B50;
-				break;
-			case 75:
-				br = B75;
-				break;
-			case 110:
-				br = B110;
-				break;
-			case 134:
-				br = B134;
-				break;
-			case 150:
-				br = B150;
-				break;
-			case 200:
-				br = B200;
-				break;
-			case 300:
-				br = B300;
-				break;
-			case 600:
-				br = B600;
-				break;
-			case 1200:
-				br = B1200;
-				break;
-			case 1800:
-				br = B1800;
-				break;
-			case 2400:
-				br = B2400;
-				break;
-			case 4800:
-				br = B4800;
-				break;
-			case 9600:
-				br = B9600;
-				break;
-			case 19200:
-				br = B19200;
-				break;
-			case 38400:
-				br = B38400;
-				break;
-			case 7200:
-				br = B7200;
-				break;
-			case 14400:
-				br = B14400;
-				break;
-			case 28800:
-				br = B28800;
-				break;
-			case 57600:
-				br = B57600;
-				break;
-			case 76800:
-				br = B76800;
-				break;
-			case 115200:
-				br = B115200;
-				break;
-			case 230400:
-				br = B230400;
-				break;
+		case 50:
+			br = B50;
+			break;
+		case 75:
+			br = B75;
+			break;
+		case 110:
+			br = B110;
+			break;
+		case 134:
+			br = B134;
+			break;
+		case 150:
+			br = B150;
+			break;
+		case 200:
+			br = B200;
+			break;
+		case 300:
+			br = B300;
+			break;
+		case 600:
+			br = B600;
+			break;
+		case 1200:
+			br = B1200;
+			break;
+		case 1800:
+			br = B1800;
+			break;
+		case 2400:
+			br = B2400;
+			break;
+		case 4800:
+			br = B4800;
+			break;
+		case 9600:
+			br = B9600;
+			break;
+		case 19200:
+			br = B19200;
+			break;
+		case 38400:
+			br = B38400;
+			break;
+		case 7200:
+			br = B7200;
+			break;
+		case 14400:
+			br = B14400;
+			break;
+		case 28800:
+			br = B28800;
+			break;
+		case 57600:
+			br = B57600;
+			break;
+		case 76800:
+			br = B76800;
+			break;
+		case 115200:
+			br = B115200;
+			break;
+		case 230400:
+			br = B230400;
+			break;
 		}
 		int r;
 		if ((r = cfsetispeed(termios, br)) != 0)

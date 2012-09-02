@@ -38,14 +38,15 @@ final public class Termios {
 	public byte[] c_cc = new byte[20];
 	public int c_ispeed;
 	public int c_ospeed;
+
 	public void set(Termios s) {
-		c_iflag=s.c_iflag;
-		c_oflag=s.c_oflag;
-		c_cflag=s.c_cflag;
-		c_lflag=s.c_lflag;
-		System.arraycopy(s.c_cc,0,c_cc,0,c_cc.length);
-		c_ispeed=s.c_ispeed;
-		c_ospeed=s.c_ospeed;
-		
+		c_iflag = s.c_iflag;
+		c_oflag = s.c_oflag;
+		c_cflag = s.c_cflag;
+		c_lflag = s.c_lflag;
+		System.arraycopy(s.c_cc, 0, c_cc, 0, c_cc.length);
+		c_ispeed = s.c_ispeed;
+		c_ospeed = s.c_ospeed;
+
 	}
 }

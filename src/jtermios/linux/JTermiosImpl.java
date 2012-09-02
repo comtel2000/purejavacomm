@@ -30,35 +30,28 @@
 
 package jtermios.linux;
 
+import static jtermios.JTermios.*;
+import static jtermios.JTermios.JTermiosLogging.log;
+
 import java.io.File;
-
-import java.nio.Buffer;
-
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import jtermios.FDSet;
-
 import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
-import jtermios.JTermios.JTermiosInterface;
 import jtermios.linux.JTermiosImpl.Linux_C_lib.pollfd;
 import jtermios.linux.JTermiosImpl.Linux_C_lib.serial_struct;
 
-import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.NativeLongByReference;
-
-import static jtermios.JTermios.*;
-import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static String DEVICE_DIR_PATH = "/dev/";
@@ -181,8 +174,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 			public int baud_base;
 			public short close_delay;
 			public short io_type;
-			//public char io_type;
-			//public char reserved_char;
+			// public char io_type;
+			// public char reserved_char;
 			public int hub6;
 			public short closing_wait;
 			public short closing_wait2;
@@ -241,16 +234,16 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	public JTermiosImpl() {
 		log = log && log(1, "instantiating %s\n", getClass().getCanonicalName());
 
-		//linux/serial.h stuff
+		// linux/serial.h stuff
 		FIONREAD = 0x541B; // Looked up manually
-		//fcntl.h stuff
+		// fcntl.h stuff
 		O_RDWR = 0x00000002;
 		O_NONBLOCK = 0x00000800;
 		O_NOCTTY = 0x00000100;
 		O_NDELAY = 0x00000800;
 		F_GETFL = 0x00000003;
 		F_SETFL = 0x00000004;
-		//errno.h stuff
+		// errno.h stuff
 		EAGAIN = 11;
 		EACCES = 13;
 		EEXIST = 17;
@@ -270,7 +263,7 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		EOVERFLOW = 75;
 		EROFS = 30;
 		ENOTSUP = 95;
-		//termios.h stuff
+		// termios.h stuff
 		TIOCM_RNG = 0x00000080;
 		TIOCM_CAR = 0x00000040;
 		IGNBRK = 0x00000001;
@@ -339,13 +332,13 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		B57600 = 4097;
 		B115200 = 4098;
 		B230400 = 4099;
-		//poll.h stuff
+		// poll.h stuff
 		POLLIN = 0x0001;
 		POLLPRI = 0x0002;
 		POLLOUT = 0x0004;
 		POLLERR = 0x0008;
 		POLLNVAL = 0x0020;
-		//select.h stuff
+		// select.h stuff
 
 	}
 
@@ -427,7 +420,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	}
 
 	public int tcsendbreak(int fd, int duration) {
-		// If duration is not zero, it sends zero-valued bits for duration*N seconds,
+		// If duration is not zero, it sends zero-valued bits for duration*N
+		// seconds,
 		// where N is at least 0.25, and not more than 0.5.
 		return m_Clib.tcsendbreak(fd, duration / 250);
 	}
@@ -479,9 +473,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 
@@ -495,7 +489,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 
 	// This ioctl is Linux specific, so keep it private for now
 	private int ioctl(int fd, int cmd, serial_struct data) {
-		// Do the logging here as this does not go through the JTermios which normally does the logging
+		// Do the logging here as this does not go through the JTermios which
+		// normally does the logging
 		log = log && log(5, "> ioctl(%d,%d,%s)\n", fd, cmd, data);
 		int ret = m_Clib.ioctl(fd, cmd, data);
 		log = log && log(3, "< tcsetattr(%d,%d,%s) => %d\n", fd, cmd, data, ret);
@@ -541,7 +536,8 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 				// in case custom divisor was in use, turn it off first
 				serial_struct ss = new serial_struct();
 
-				// not every driver supports TIOCGSERIAL, so if it fails, just ignore it
+				// not every driver supports TIOCGSERIAL, so if it fails, just
+				// ignore it
 				if ((r = ioctl(fd, TIOCGSERIAL, ss)) == 0) {
 					ss.flags &= ~ASYNC_SPD_MASK;
 					if ((r = ioctl(fd, TIOCSSERIAL, ss)) != 0)

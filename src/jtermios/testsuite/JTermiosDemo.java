@@ -30,8 +30,45 @@
 
 package jtermios.testsuite;
 
-import static jtermios.JTermios.*;
-import static jtermios.windows.WinAPI.*;
+import static jtermios.JTermios.B9600;
+import static jtermios.JTermios.CLOCAL;
+import static jtermios.JTermios.CREAD;
+import static jtermios.JTermios.CS8;
+import static jtermios.JTermios.CSIZE;
+import static jtermios.JTermios.CSTOPB;
+import static jtermios.JTermios.ECHO;
+import static jtermios.JTermios.ECHOE;
+import static jtermios.JTermios.FD_SET;
+import static jtermios.JTermios.FD_ZERO;
+import static jtermios.JTermios.F_SETFL;
+import static jtermios.JTermios.ICANON;
+import static jtermios.JTermios.INPCK;
+import static jtermios.JTermios.ISIG;
+import static jtermios.JTermios.IXANY;
+import static jtermios.JTermios.IXOFF;
+import static jtermios.JTermios.IXON;
+import static jtermios.JTermios.OPOST;
+import static jtermios.JTermios.O_NOCTTY;
+import static jtermios.JTermios.O_NONBLOCK;
+import static jtermios.JTermios.O_RDWR;
+import static jtermios.JTermios.PARENB;
+import static jtermios.JTermios.TCIOFLUSH;
+import static jtermios.JTermios.TCSANOW;
+import static jtermios.JTermios.VMIN;
+import static jtermios.JTermios.VTIME;
+import static jtermios.JTermios.cfsetispeed;
+import static jtermios.JTermios.cfsetospeed;
+import static jtermios.JTermios.close;
+import static jtermios.JTermios.fcntl;
+import static jtermios.JTermios.getPortList;
+import static jtermios.JTermios.newFDSet;
+import static jtermios.JTermios.open;
+import static jtermios.JTermios.read;
+import static jtermios.JTermios.select;
+import static jtermios.JTermios.tcflush;
+import static jtermios.JTermios.tcgetattr;
+import static jtermios.JTermios.tcsetattr;
+import static jtermios.JTermios.write;
 
 import java.util.List;
 
@@ -54,7 +91,7 @@ public class JTermiosDemo {
 			port = pname;
 		}
 
-		//port = "/dev/tty.usbserial-FTOXM3NX";
+		// port = "/dev/tty.usbserial-FTOXM3NX";
 		int fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
 		if (fd == -1)
 			fail("Could not open " + port);

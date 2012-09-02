@@ -30,16 +30,82 @@
 
 package purejavacomm;
 
-import java.io.*;
-import java.util.*;
+import static jtermios.JTermios.CLOCAL;
+import static jtermios.JTermios.CREAD;
+import static jtermios.JTermios.CRTSCTS;
+import static jtermios.JTermios.CS5;
+import static jtermios.JTermios.CS6;
+import static jtermios.JTermios.CS7;
+import static jtermios.JTermios.CS8;
+import static jtermios.JTermios.CSIZE;
+import static jtermios.JTermios.CSTOPB;
+import static jtermios.JTermios.DC1;
+import static jtermios.JTermios.DC3;
+import static jtermios.JTermios.ECHO;
+import static jtermios.JTermios.ECHOE;
+import static jtermios.JTermios.FD_ISSET;
+import static jtermios.JTermios.FD_SET;
+import static jtermios.JTermios.FD_ZERO;
+import static jtermios.JTermios.FIONREAD;
+import static jtermios.JTermios.F_GETFL;
+import static jtermios.JTermios.F_SETFL;
+import static jtermios.JTermios.ICANON;
+import static jtermios.JTermios.INPCK;
+import static jtermios.JTermios.ISIG;
+import static jtermios.JTermios.ISTRIP;
+import static jtermios.JTermios.IXANY;
+import static jtermios.JTermios.IXOFF;
+import static jtermios.JTermios.IXON;
+import static jtermios.JTermios.OPOST;
+import static jtermios.JTermios.O_NOCTTY;
+import static jtermios.JTermios.O_NONBLOCK;
+import static jtermios.JTermios.O_RDWR;
+import static jtermios.JTermios.PARENB;
+import static jtermios.JTermios.PARODD;
+import static jtermios.JTermios.POLLIN;
+import static jtermios.JTermios.POLLNVAL;
+import static jtermios.JTermios.POLLOUT;
+import static jtermios.JTermios.TCIOFLUSH;
+import static jtermios.JTermios.TCSANOW;
+import static jtermios.JTermios.TIOCMGET;
+import static jtermios.JTermios.TIOCMSET;
+import static jtermios.JTermios.TIOCM_CD;
+import static jtermios.JTermios.TIOCM_CTS;
+import static jtermios.JTermios.TIOCM_DSR;
+import static jtermios.JTermios.TIOCM_DTR;
+import static jtermios.JTermios.TIOCM_RI;
+import static jtermios.JTermios.TIOCM_RTS;
+import static jtermios.JTermios.VMIN;
+import static jtermios.JTermios.VSTART;
+import static jtermios.JTermios.VSTOP;
+import static jtermios.JTermios.VTIME;
+import static jtermios.JTermios.cfmakeraw;
+import static jtermios.JTermios.errno;
+import static jtermios.JTermios.fcntl;
+import static jtermios.JTermios.ioctl;
+import static jtermios.JTermios.newFDSet;
+import static jtermios.JTermios.open;
+import static jtermios.JTermios.poll;
+import static jtermios.JTermios.select;
+import static jtermios.JTermios.setspeed;
+import static jtermios.JTermios.tcdrain;
+import static jtermios.JTermios.tcflush;
+import static jtermios.JTermios.tcgetattr;
+import static jtermios.JTermios.tcsendbreak;
+import static jtermios.JTermios.tcsetattr;
+import static jtermios.JTermios.JTermiosLogging.lineno;
+import static jtermios.JTermios.JTermiosLogging.log;
 
-import com.sun.jna.Platform;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.TooManyListenersException;
 
-import jtermios.*;
+import jtermios.FDSet;
+import jtermios.Pollfd;
+import jtermios.Termios;
+import jtermios.TimeVal;
 
-import static jtermios.JTermios.JTermiosLogging.*;
-
-import static jtermios.JTermios.*;
 import com.sun.jna.Platform;
 
 public class PureJavaSerialPort extends SerialPort {
@@ -80,8 +146,9 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private int[] m_ioctl = { 0 };
 	private int m_ControlLineStates;
-	// we cache termios in m_Termios because we don't rely on reading it back with tcgetattr()
-	// which for Mac OS X / CRTSCTS does not work, it is also more efficient 
+	// we cache termios in m_Termios because we don't rely on reading it back
+	// with tcgetattr()
+	// which for Mac OS X / CRTSCTS does not work, it is also more efficient
 	private Termios m_Termios = new Termios();
 
 	private void sendDataEvents(boolean read, boolean write) {
@@ -97,7 +164,7 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private synchronized void sendNonDataEvents() {
 		if (ioctl(m_FD, TIOCMGET, m_ioctl) < 0)
-			return; //FIXME decide what to with errors in the background thread
+			return; // FIXME decide what to with errors in the background thread
 		int oldstates = m_ControlLineStates;
 		m_ControlLineStates = m_ioctl[0];
 		int newstates = m_ControlLineStates;
@@ -279,16 +346,22 @@ public class PureJavaSerialPort extends SerialPort {
 		checkState();
 		// FIXME POSIX does not specify how duration is interpreted
 		// Opengroup POSIX says:
-		// If the terminal is using asynchronous serial data transmission, tcsendbreak() 
-		// shall cause transmission of a continuous stream of zero-valued bits for a specific duration. 
-		// If duration is 0, it shall cause transmission of zero-valued bits for at least 0.25 seconds, 
-		// and not more than 0.5 seconds. If duration is not 0, it shall send zero-valued bits for an implementation-defined period of time.
+		// If the terminal is using asynchronous serial data transmission,
+		// tcsendbreak()
+		// shall cause transmission of a continuous stream of zero-valued bits
+		// for a specific duration.
+		// If duration is 0, it shall cause transmission of zero-valued bits for
+		// at least 0.25 seconds,
+		// and not more than 0.5 seconds. If duration is not 0, it shall send
+		// zero-valued bits for an implementation-defined period of time.
 		// From the man page for Linux tcsendbreak:
-		// The effect of a non-zero duration with tcsendbreak() varies. 
-		// SunOS specifies a break of duration*N seconds, 
-		// where N is at least 0.25, and not more than 0.5. Linux, AIX, DU, Tru64 send a break of duration milliseconds. 
-		// FreeBSD and NetBSD and HP-UX and MacOS ignore the value of duration. 
-		// Under Solaris and Unixware, tcsendbreak() with non-zero duration behaves like tcdrain().
+		// The effect of a non-zero duration with tcsendbreak() varies.
+		// SunOS specifies a break of duration*N seconds,
+		// where N is at least 0.25, and not more than 0.5. Linux, AIX, DU,
+		// Tru64 send a break of duration milliseconds.
+		// FreeBSD and NetBSD and HP-UX and MacOS ignore the value of duration.
+		// Under Solaris and Unixware, tcsendbreak() with non-zero duration
+		// behaves like tcdrain().
 
 		tcsendbreak(m_FD, duration);
 	}
@@ -399,56 +472,56 @@ public class PureJavaSerialPort extends SerialPort {
 
 			int db;
 			switch (dataBits) {
-				case SerialPort.DATABITS_5:
-					db = CS5;
-					break;
-				case SerialPort.DATABITS_6:
-					db = CS6;
-					break;
-				case SerialPort.DATABITS_7:
-					db = CS7;
-					break;
-				case SerialPort.DATABITS_8:
-					db = CS8;
-					break;
-				default:
-					throw new UnsupportedCommOperationException("dataBits = " + dataBits);
+			case SerialPort.DATABITS_5:
+				db = CS5;
+				break;
+			case SerialPort.DATABITS_6:
+				db = CS6;
+				break;
+			case SerialPort.DATABITS_7:
+				db = CS7;
+				break;
+			case SerialPort.DATABITS_8:
+				db = CS8;
+				break;
+			default:
+				throw new UnsupportedCommOperationException("dataBits = " + dataBits);
 			}
 
 			int sb;
 			switch (stopBits) {
-				case SerialPort.STOPBITS_1:
-					sb = 1;
-					break;
-				case SerialPort.STOPBITS_2:
-					sb = 2;
-					break;
-				default:
-					throw new UnsupportedCommOperationException("stopBits = " + stopBits);
+			case SerialPort.STOPBITS_1:
+				sb = 1;
+				break;
+			case SerialPort.STOPBITS_2:
+				sb = 2;
+				break;
+			default:
+				throw new UnsupportedCommOperationException("stopBits = " + stopBits);
 			}
 
 			int fi = m_Termios.c_iflag;
 			int fc = m_Termios.c_cflag;
 			switch (parity) {
-				case SerialPort.PARITY_NONE:
-					fc &= ~PARENB;
-					fi &= ~(INPCK | ISTRIP);
-					break;
-				case SerialPort.PARITY_EVEN:
-					fc |= PARENB;
-					fc &= ~PARODD;
-					fi &= ~(INPCK | ISTRIP);
-					break;
-				case SerialPort.PARITY_ODD:
-					fc |= PARENB;
-					fc |= PARODD;
-					fi &= ~(INPCK | ISTRIP);
-					break;
-				default:
-					throw new UnsupportedCommOperationException("parity = " + parity);
+			case SerialPort.PARITY_NONE:
+				fc &= ~PARENB;
+				fi &= ~(INPCK | ISTRIP);
+				break;
+			case SerialPort.PARITY_EVEN:
+				fc |= PARENB;
+				fc &= ~PARODD;
+				fi &= ~(INPCK | ISTRIP);
+				break;
+			case SerialPort.PARITY_ODD:
+				fc |= PARENB;
+				fc |= PARODD;
+				fi &= ~(INPCK | ISTRIP);
+				break;
+			default:
+				throw new UnsupportedCommOperationException("parity = " + parity);
 			}
 
-			// update the hardware 
+			// update the hardware
 
 			fc &= ~CSIZE; /* Mask the character size bits */
 			fc |= db; /* Set data bits */
@@ -538,7 +611,7 @@ public class PureJavaSerialPort extends SerialPort {
 	synchronized public InputStream getInputStream() throws IOException {
 		checkState();
 		return new InputStream() {
-			private TimeVal m_TimeOut = new TimeVal();
+			// private TimeVal m_TimeOut = new TimeVal();
 			private int[] m_Available = { 0 };
 			private byte[] m_Buffer = new byte[2048];
 
@@ -580,7 +653,9 @@ public class PureJavaSerialPort extends SerialPort {
 						throw new IOException();
 
 					N += n;
-					//System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n, off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis() - T0);
+					// System.out.printf("n=%d off=%d left=%d N=%d th=%d to=%d dt=%d\n",n,
+					// off,left,N,m_ReceiveThresholdValue,m_ReceiveTimeOutValue,System.currentTimeMillis()
+					// - T0);
 					if (!m_ReceiveThresholdEnabled && N > 0)
 						break;
 					if (m_ReceiveThresholdEnabled && N >= m_ReceiveThresholdValue)
@@ -681,7 +756,8 @@ public class PureJavaSerialPort extends SerialPort {
 		super();
 		this.name = name;
 
-		// unbelievable, sometimes quickly closing and re-opening fails on Windows
+		// unbelievable, sometimes quickly closing and re-opening fails on
+		// Windows
 		// so try a few times
 		int tries = 100;
 		long T0 = System.currentTimeMillis();
@@ -749,16 +825,19 @@ public class PureJavaSerialPort extends SerialPort {
 						wset = newFDSet();
 						timeout = new TimeVal();
 						timeout.tv_sec = 0;
-						timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling period
+						timeout.tv_usec = TIMEOUT * 1000; // 10 msec polling
+															// period
 					}
 
-					while (m_FD >= 0) { // lets die if the file descriptor dies on us ie the port closes
+					while (m_FD >= 0) { // lets die if the file descriptor dies
+										// on us ie the port closes
 						boolean read = (m_NotifyOnDataAvailable && !m_DataAvailableNotified);
 						boolean write = (m_NotifyOnOutputEmpty && !m_OutputEmptyNotified);
 						int n = 0;
 						if (!read && !write)
 							Thread.sleep(TIMEOUT);
-						else { // do all this only if we actually wait for read or write
+						else { // do all this only if we actually wait for read
+								// or write
 							if (USE_POLL) {
 								pollfd[0].fd = m_FD;
 								short e = 0;
@@ -845,36 +924,42 @@ public class PureJavaSerialPort extends SerialPort {
 
 	private void setReceiveTimeout() {
 		// Javadoc for javacomm says:
-		// Enabling the Timeout OR Threshold with a value a zero is a special case. 
-		// This causes the underlying driver to poll for incoming data instead being 
-		// event driven. Otherwise, the behaviour is identical to having both the 
+		// Enabling the Timeout OR Threshold with a value a zero is a special
+		// case.
+		// This causes the underlying driver to poll for incoming data instead
+		// being
+		// event driven. Otherwise, the behaviour is identical to having both
+		// the
 		// Timeout and Threshold disabled.
 		// but what does it mean?
 
-		// Threshold	         Timeout                         Behaviour
+		// Threshold Timeout Behaviour
 		//
-		// disabled	 -	         disabled	 -	     n bytes	 block until any data is available
-		//                                                       VMIN = 1, VTIME = 0
+		// disabled - disabled - n bytes block until any data is available
+		// VMIN = 1, VTIME = 0
 		//
-		// enabled	 m bytes	 disabled	 -	     n bytes	 block until min(m,n) bytes are available
-		//                                                       VMIN = 1, VTIME = 0
-		//                                                       need to loop, inside InputStream.read(), 
-		//                                                       until min(m,n) bytes received 
+		// enabled m bytes disabled - n bytes block until min(m,n) bytes are
+		// available
+		// VMIN = 1, VTIME = 0
+		// need to loop, inside InputStream.read(),
+		// until min(m,n) bytes received
 		//
-		// disabled	 -	         enabled	 x ms	 n bytes	 block for x ms or until any data is available
-		//                                                       VMIN = 0
-		//                                                       if x<25500 then 
-		//                                                          VTIME = x / 100
-		//                                                       else
-		//                                                          k = (x / 25500 + 1);
-		//                                                          VTIME = x / k / 100 + 1
-		//                                                          and we need to loop k times 
-		//                                                          inside InputStream.read()  
+		// disabled - enabled x ms n bytes block for x ms or until any data is
+		// available
+		// VMIN = 0
+		// if x<25500 then
+		// VTIME = x / 100
+		// else
+		// k = (x / 25500 + 1);
+		// VTIME = x / k / 100 + 1
+		// and we need to loop k times
+		// inside InputStream.read()
 		//
-		// enabled	 m bytes	 enabled	 x ms	 n bytes	 block for x ms or until min(m,n) bytes are available		
-		//                                                       same as previous, except we need to loop
-		//                                                       inside InputStream.read() until 
-		//                                                       until min(m,n) bytes received 
+		// enabled m bytes enabled x ms n bytes block for x ms or until min(m,n)
+		// bytes are available
+		// same as previous, except we need to loop
+		// inside InputStream.read() until
+		// until min(m,n) bytes received
 
 		byte vmin = 1;
 		byte vtime = 0;
@@ -902,7 +987,8 @@ public class PureJavaSerialPort extends SerialPort {
 	private void checkReturnCode(int code) {
 		if (code != 0) {
 			close();
-			StackTraceElement ste = Thread.currentThread().getStackTrace()[1];
+			// StackTraceElement ste =
+			// Thread.currentThread().getStackTrace()[1];
 			String msg = String.format("JTermios call returned %d at %s", code, lineno());
 			log = log && log(1, "%s\n", msg);
 			throw new IllegalStateException(msg);

@@ -32,7 +32,6 @@ package purejavacomm.testsuite;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
-import java.util.Random;
 
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.NoSuchPortException;

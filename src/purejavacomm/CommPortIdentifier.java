@@ -31,7 +31,12 @@
 package purejavacomm;
 
 // FIXME no mechanism to warn about duplicate port names
-import static jtermios.JTermios.*;
+import static jtermios.JTermios.EBUSY;
+import static jtermios.JTermios.O_NOCTTY;
+import static jtermios.JTermios.O_NONBLOCK;
+import static jtermios.JTermios.O_RDWR;
+import static jtermios.JTermios.errno;
+import static jtermios.JTermios.getPortList;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -45,7 +50,6 @@ public class CommPortIdentifier {
 	private static volatile Object m_Mutex = new Object();
 	private volatile String m_PortName;
 	private volatile int m_PortType;
-	private volatile CommPort m_CommPort;
 	private volatile CommDriver m_Driver;
 	private volatile static Hashtable<String, CommPortIdentifier> m_PortIdentifiers = new Hashtable<String, CommPortIdentifier>();
 	private volatile static Hashtable<CommPort, CommPortIdentifier> m_OpenPorts = new Hashtable<CommPort, CommPortIdentifier>();
@@ -73,10 +77,11 @@ public class CommPortIdentifier {
 			for (CommPortIdentifier portid : m_OpenPorts.values())
 				if (portid.getName().equals(portName))
 					return portid;
-			if (ENUMERATE) { // enumerating ports takes time, lets see if we can avoid it
-				Enumeration e = getPortIdentifiers();
+			if (ENUMERATE) { // enumerating ports takes time, lets see if we can
+								// avoid it
+				Enumeration<CommPortIdentifier> e = getPortIdentifiers();
 				while (e.hasMoreElements()) {
-					CommPortIdentifier portid = (CommPortIdentifier) e.nextElement();
+					CommPortIdentifier portid = e.nextElement();
 					if (portid.getName().equals(portName))
 						return portid;
 				}
@@ -87,13 +92,16 @@ public class CommPortIdentifier {
 
 				// check if we can open a port with the given name
 				int fd = jtermios.JTermios.open(portName, O_RDWR | O_NOCTTY | O_NONBLOCK);
-				if (fd != -1) { // yep, it exists, so close it and create a port id object for it
-					// FIXME this does not detect if the port name is invalid device name
+				if (fd != -1) { // yep, it exists, so close it and create a port
+								// id object for it
+					// FIXME this does not detect if the port name is invalid
+					// device name
 					// but is valid and existing filename
 					jtermios.JTermios.close(fd);
 					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 				}
-				if (errno() == EBUSY) // exists but busy, cannot throw anything here, so return a port if for it
+				if (errno() == EBUSY) // exists but busy, cannot throw anything
+										// here, so return a port if for it
 					return new CommPortIdentifier(portName, PORT_SERIAL, null);
 			}
 			throw new NoSuchPortException();
@@ -135,7 +143,10 @@ public class CommPortIdentifier {
 			if (info != null)
 				port = info.m_Driver.getCommPort(m_PortName, info.m_PortType);
 			else
-				port = new PureJavaSerialPort(m_PortName, timeout); // FIXME timeout here is not used
+				port = new PureJavaSerialPort(m_PortName, timeout); // FIXME
+																	// timeout
+																	// here is
+																	// not used
 			m_OpenPorts.put(port, this);
 			m_Owners.put(this, appname);
 			fireOwnershipEvent(CommPortOwnershipListener.PORT_OWNED);
@@ -149,7 +160,7 @@ public class CommPortIdentifier {
 			CommPortIdentifier portid = m_OpenPorts.remove(port);
 			if (portid != null) {
 				portid.fireOwnershipEvent(CommPortOwnershipListener.PORT_UNOWNED);
-            	m_Owners.remove(portid);
+				m_Owners.remove(portid);
 			}
 		}
 	}
@@ -166,12 +177,12 @@ public class CommPortIdentifier {
 		return m_PortType;
 	}
 
-	public static Enumeration getPortIdentifiers() {
+	public static Enumeration<CommPortIdentifier> getPortIdentifiers() {
 		synchronized (m_Mutex) {
 
-			return new Enumeration() {
+			return new Enumeration<CommPortIdentifier>() {
 				List<CommPortIdentifier> m_PortIDs;
-				{ // insert the  'addPortName' ports to the dynamic port list
+				{ // insert the 'addPortName' ports to the dynamic port list
 					m_PortIDs = new LinkedList<CommPortIdentifier>();
 					for (CommPortIdentifier portid : m_PortIdentifiers.values())
 						m_PortIDs.add(portid);
@@ -187,7 +198,7 @@ public class CommPortIdentifier {
 					return m_Iterator != null ? m_Iterator.hasNext() : false;
 				}
 
-				public Object nextElement() {
+				public CommPortIdentifier nextElement() {
 					return m_Iterator.next();
 				};
 			};

@@ -35,7 +35,10 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Random;
 
-import purejavacomm.*;
+import purejavacomm.CommPortIdentifier;
+import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
 
 public class PureJavaCommDemo {
 
@@ -43,9 +46,9 @@ public class PureJavaCommDemo {
 		try {
 			System.out.println("PureJavaCommDemo");
 			CommPortIdentifier portid = null;
-			Enumeration e = CommPortIdentifier.getPortIdentifiers();
+			Enumeration<CommPortIdentifier> e = CommPortIdentifier.getPortIdentifiers();
 			while (e.hasMoreElements()) {
-				portid = (CommPortIdentifier) e.nextElement();
+				portid = e.nextElement();
 				System.out.println("found " + portid.getName());
 			}
 			if (portid != null) {
@@ -74,7 +77,8 @@ public class PureJavaCommDemo {
 									byte b = buffer[i];
 									linebuf[inp++] = b;
 									if (b == '\n') {
-										//System.err.print("Received: " + new String(linebuf, 0, inp));
+										// System.err.print("Received: " + new
+										// String(linebuf, 0, inp));
 										int s = 0;
 										int j;
 										for (j = 0; j < inp - 2; j++)
@@ -85,15 +89,16 @@ public class PureJavaCommDemo {
 											System.out.println("check sum failure");
 											errcnt++;
 										}
-										System.out.println("msg "+inp+" ok " + okcnt + " err " + errcnt);
+										System.out.println("msg " + inp + " ok " + okcnt + " err " + errcnt);
 										inp = 0;
 									}
 								}
 							}
 							if (event.getEventType() == SerialPortEvent.OUTPUT_BUFFER_EMPTY) {
-								int n = 4+ (rnd.nextInt() & 63);
+								int n = 4 + (rnd.nextInt() & 63);
 								byte[] buffer = new byte[n + 2];
-								//System.err.print("Sending: " + new String(buffer));
+								// System.err.print("Sending: " + new
+								// String(buffer));
 								int s = 0;
 								int i;
 								for (i = 0; i < n; i++) {

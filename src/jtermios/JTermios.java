@@ -30,7 +30,7 @@
 
 package jtermios;
 
-import static jtermios.JTermios.JTermiosLogging.*;
+import static jtermios.JTermios.JTermiosLogging.log;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -49,26 +49,39 @@ public class JTermios {
 
 	// Note About the read/write methods and the buffers
 	//
-	// This library provides read/write(byte[] buffer,int length) without an offset
-	// to the buffer. This is because it appears that there is a bug in JNA's use of
-	// ByteBuffer.wrap(byte[] buffer,int offset,int length) in that the offset gets
+	// This library provides read/write(byte[] buffer,int length) without an
+	// offset
+	// to the buffer. This is because it appears that there is a bug in JNA's
+	// use of
+	// ByteBuffer.wrap(byte[] buffer,int offset,int length) in that the offset
+	// gets
 	// ignored. So this needs to be handled in the JTermiosImpl classes
-	// or somewhere else. Handling the offset requires a buffer to hold 
-	// temporarily the bytes. I deemed that it is better to pass the buck ie burden 
-	// to the clients of JTermios as they know better what size of buffer (if any) 
-	// is best and because then the implementation of that buffer is in one place, 
-	// not in each of the JTermiosImpl classes. In this way Mac OS X (and presumably
-	// Linux/Unix) does need not a buffer at all in JTermiosImpl. Windows needs a
-	// JNA Memory buffer anyway because of the limitations inherent in using 
+	// or somewhere else. Handling the offset requires a buffer to hold
+	// temporarily the bytes. I deemed that it is better to pass the buck ie
+	// burden
+	// to the clients of JTermios as they know better what size of buffer (if
+	// any)
+	// is best and because then the implementation of that buffer is in one
+	// place,
+	// not in each of the JTermiosImpl classes. In this way Mac OS X (and
+	// presumably
+	// Linux/Unix) does need not a buffer at all in JTermiosImpl. Windows needs
+	// a
+	// JNA Memory buffer anyway because of the limitations inherent in using
 	// Overlapped I/O with JNA.
 
-	// The 'constants' here, which are equivalent to the corresponding #defines in C
+	// The 'constants' here, which are equivalent to the corresponding #defines
+	// in C
 	// come from Mac OS X 10.6.6 / x86_64 architecture
-	// Every implementing class for each architecture needs to initialize them in 
+	// Every implementing class for each architecture needs to initialize them
+	// in
 	// their JTermiosImpl constructor. For Windows the termios functionality is
-	// totally emulated so jtermios.windows.JTermiosImpl can just use these default values as
-	// can obviously jtermios.macosx.JTermiosImpl (at least for x86_64 architecture).
-	// Much as we liked these cannot be defined 'final' but should be treated immutable all the same.
+	// totally emulated so jtermios.windows.JTermiosImpl can just use these
+	// default values as
+	// can obviously jtermios.macosx.JTermiosImpl (at least for x86_64
+	// architecture).
+	// Much as we liked these cannot be defined 'final' but should be treated
+	// immutable all the same.
 
 	// sys/filio.h stuff
 	public static int FIONREAD = 0x4004667F;
@@ -152,12 +165,13 @@ public class JTermios {
 	public static int CREAD = 0x00000800;
 	public static int PARENB = 0x00001000;
 	public static int PARODD = 0x00002000;
-	public static int CMSPAR = 010000000000; // Is this standard ? Not available on Mac OS X
-	//public static int CCTS_OFLOW = 0x00010000; // Not linux
-	//public static int CRTS_IFLOW = 0x00020000; // Not linux
-	//public static int CDTR_IFLOW = 0x00040000; // Not linux
-	//public static int CDSR_OFLOW = 0x00080000; // Not linux
-	//public static int CCAR_OFLOW = 0x00100000; // Not linux
+	public static int CMSPAR = 010000000000; // Is this standard ? Not available
+												// on Mac OS X
+	// public static int CCTS_OFLOW = 0x00010000; // Not linux
+	// public static int CRTS_IFLOW = 0x00020000; // Not linux
+	// public static int CDTR_IFLOW = 0x00040000; // Not linux
+	// public static int CDSR_OFLOW = 0x00080000; // Not linux
+	// public static int CCAR_OFLOW = 0x00100000; // Not linux
 	public static int B0 = 0;
 	public static int B50 = 50;
 	public static int B75 = 75;
@@ -183,12 +197,12 @@ public class JTermios {
 	public static int B230400 = 230400;
 	// poll.h stuff
 	public static short POLLIN = 0x0001;
-	//public static short POLLRDNORM = 0x0040; // Not Linux
-	//public static short POLLRDBAND = 0x0080; // Not Linux
+	// public static short POLLRDNORM = 0x0040; // Not Linux
+	// public static short POLLRDBAND = 0x0080; // Not Linux
 	public static short POLLPRI = 0x0002;
 	public static short POLLOUT = 0x0004;
-	//public static short POLLWRNORM = 0x0004; // Not Linux
-	//public static short POLLWRBAND = 0x0100; // Not Linux
+	// public static short POLLWRNORM = 0x0004; // Not Linux
+	// public static short POLLWRBAND = 0x0100; // Not Linux
 	public static short POLLERR = 0x0008;
 	public static short POLLNVAL = 0x0020;
 
@@ -269,13 +283,13 @@ public class JTermios {
 			m_Termios.shutDown();
 	}
 
-	static { // INSTANTIATION 
+	static { // INSTANTIATION
 		String loglevel = System.getProperty("purejavacomm.loglevel");
 		if (loglevel != null)
 			JTermiosLogging.setLogLevel(Integer.parseInt(loglevel));
 		else
 			JTermiosLogging.setLogLevel(0);
-		int path_max;
+
 		if (Platform.isMac()) {
 			m_Termios = new jtermios.macosx.JTermiosImpl();
 		} else if (Platform.isWindows()) {

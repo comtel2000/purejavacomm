@@ -33,8 +33,8 @@ package purejavacomm;
 public class PureJavaCommDriver implements CommDriver {
 
 	public CommPort getCommPort(String name, int type) {
-		//if (type == CommPortIdentifier.PORT_SERIAL)
-		//	return new PureJavaSerialPort(name,0);
+		// if (type == CommPortIdentifier.PORT_SERIAL)
+		// return new PureJavaSerialPort(name,0);
 		return null;
 	}
 

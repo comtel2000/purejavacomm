@@ -73,7 +73,7 @@ public class Test1 extends TestBase {
 			if (counts[SerialPortEvent.DSR] != N / 2 - 1)
 				fail("DSR loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.DSR]);
 			if (counts[SerialPortEvent.RI] != N - 1)
-				fail("RI loopback failed, expected %d toggles, got %d", N-1, counts[SerialPortEvent.RI]);
+				fail("RI loopback failed, expected %d toggles, got %d", N - 1, counts[SerialPortEvent.RI]);
 			if (counts[SerialPortEvent.CD] != N / 2 - 1)
 				fail("CTS loopback failed, expected %d toggles, got %d", N / 2 - 1, counts[SerialPortEvent.CD]);
 			finishedOK();

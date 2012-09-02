@@ -31,6 +31,9 @@
 package purejavacomm;
 
 public class UnsupportedCommOperationException extends Exception {
+
+	private static final long serialVersionUID = 1852283083250249954L;
+
 	public UnsupportedCommOperationException(String msg) {
 		super(msg);
 	}

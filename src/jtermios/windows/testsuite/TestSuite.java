@@ -127,18 +127,18 @@ public class TestSuite {
 			System.out.println("WaitForSingleObject/write");
 			int dwRes = WaitForSingleObject(osWriter.hEvent, 1000);
 			switch (dwRes) {
-				case WAIT_OBJECT_0:
-					if (!GetOverlappedResult(hComm, osWriter, txn, true))
-						check(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult/osWriter");
-					else
-						write = true;
-					break;
-				case WAIT_TIMEOUT:
-					System.out.println("write TIMEOT");
-					break;
-				default:
-					check(false, "WaitForSingleObject/write");
-					break;
+			case WAIT_OBJECT_0:
+				if (!GetOverlappedResult(hComm, osWriter, txn, true))
+					check(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult/osWriter");
+				else
+					write = true;
+				break;
+			case WAIT_TIMEOUT:
+				System.out.println("write TIMEOT");
+				break;
+			default:
+				check(false, "WaitForSingleObject/write");
+				break;
 			}
 		}
 		System.out.println("Transmit: '" + txm.getString(0) + "' , len=" + txn[0]);
@@ -159,20 +159,20 @@ public class TestSuite {
 			check(ResetEvent(osReader.hEvent), "ResetEvent/osReader.hEvent");
 			int dwRes = WaitForSingleObject(osReader.hEvent, 1000);
 			switch (dwRes) {
-				case WAIT_OBJECT_0:
-					if (!GetOverlappedResult(hComm, osReader, rxn, false))
-						check(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult/osReader");
-					else
-						read = true;
-					break;
+			case WAIT_OBJECT_0:
+				if (!GetOverlappedResult(hComm, osReader, rxn, false))
+					check(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult/osReader");
+				else
+					read = true;
+				break;
 
-				case WAIT_TIMEOUT:
-					System.out.println("WAIT_TIMEOUT");
-					break;
+			case WAIT_TIMEOUT:
+				System.out.println("WAIT_TIMEOUT");
+				break;
 
-				default:
-					check(false, "WaitForSingleObject/osReader.hEvent");
-					break;
+			default:
+				check(false, "WaitForSingleObject/osReader.hEvent");
+				break;
 			}
 		}
 

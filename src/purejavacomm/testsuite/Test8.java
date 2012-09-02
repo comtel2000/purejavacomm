@@ -29,9 +29,7 @@
  */
 package purejavacomm.testsuite;
 
-import java.util.Arrays;
-
-import purejavacomm.*;
+import purejavacomm.SerialPort;
 
 public class Test8 extends TestBase {
 	static void run() throws Exception {
@@ -39,7 +37,9 @@ public class Test8 extends TestBase {
 			begin("Test8 - parity");
 			openPort();
 			int[] parity = { SerialPort.PARITY_NONE, SerialPort.PARITY_ODD, SerialPort.PARITY_EVEN };
-			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_2 };// , SerialPort.STOPBITS_1_5 }; 
+			int[] stopbits = { SerialPort.STOPBITS_1, SerialPort.STOPBITS_2 };// ,
+																				// SerialPort.STOPBITS_1_5
+																				// };
 			int[] databits = { SerialPort.DATABITS_5, SerialPort.DATABITS_6, SerialPort.DATABITS_7, SerialPort.DATABITS_8 };
 			int[] datamask = { 0x1F, 0x3F, 0x7F, 0xFF };
 			for (int pi = 0; pi < parity.length; pi++) {
@@ -57,7 +57,7 @@ public class Test8 extends TestBase {
 						long t0 = System.currentTimeMillis();
 						m_Out.write(sent);
 
-						//sleep(500);
+						// sleep(500);
 
 						int n = m_In.read(rcvd);
 
@@ -65,11 +65,12 @@ public class Test8 extends TestBase {
 							fail("was expecting %d characters got %d", sent.length, n);
 						for (int i = 0; i < 256; ++i) {
 							if (sent[i] != rcvd[i])
-								fail("failed: transmit '0x%02X' != receive'0x%02X' with databits %d stopbit %d parity %d", sent[i], rcvd[i], databits[dbi], stopbits[sbi], parity[pi]);
+								fail("failed: transmit '0x%02X' != receive'0x%02X' with databits %d stopbit %d parity %d", sent[i], rcvd[i], databits[dbi],
+										stopbits[sbi], parity[pi]);
 						}
 						if (n < 256)
 							fail("did not receive all 256 chars, got %d", n);
-						//sleep(1);
+						// sleep(1);
 					}
 				}
 			}

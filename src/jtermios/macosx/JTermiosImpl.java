@@ -30,32 +30,27 @@
 
 package jtermios.macosx;
 
+import static jtermios.JTermios.B9600;
+import static jtermios.JTermios.TCSANOW;
+import static jtermios.JTermios.JTermiosLogging.log;
+
 import java.io.File;
-
-import java.nio.Buffer;
-
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import jtermios.FDSet;
-
 import jtermios.JTermios;
 import jtermios.Pollfd;
 import jtermios.Termios;
 import jtermios.TimeVal;
 import jtermios.macosx.JTermiosImpl.MacOSX_C_lib.pollfd;
 
-import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.NativeLongByReference;
-
-import static jtermios.JTermios.*;
-import static jtermios.JTermios.JTermiosLogging.log;
 
 public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 	private static int IOSSIOSPEED = 0x80045402;
@@ -298,9 +293,9 @@ public class JTermiosImpl implements jtermios.JTermios.JTermiosInterface {
 		pollfd[] pfds = new pollfd[fds.length];
 		for (int i = 0; i < nfds; i++)
 			pfds[i] = new pollfd(fds[i]);
-        int ret = m_Clib.poll(pfds, nfds, timeout);
-        for(int i = 0; i < nfds; i++)
-            fds[i].revents = pfds[i].revents;
+		int ret = m_Clib.poll(pfds, nfds, timeout);
+		for (int i = 0; i < nfds; i++)
+			fds[i].revents = pfds[i].revents;
 		return ret;
 	}
 

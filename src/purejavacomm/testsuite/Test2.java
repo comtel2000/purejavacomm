@@ -29,7 +29,6 @@
  */
 package purejavacomm.testsuite;
 
-import java.util.Arrays;
 import java.util.Random;
 
 import purejavacomm.SerialPort;
@@ -117,7 +116,7 @@ public class Test2 extends TestBase {
 	static private byte[] generateRandomMessage() {
 		int n = 4 + (rnd.nextInt() & 63);
 		byte[] buffer = new byte[n + 2];
-		//System.out.print("Sending: " + new String(buffer));
+		// System.out.print("Sending: " + new String(buffer));
 		int s = 0;
 		int i;
 		for (i = 0; i < n; i++) {
@@ -140,7 +139,7 @@ public class Test2 extends TestBase {
 
 			m_ReceiveBuffer[m_BytesReceived++] = b;
 			if (b == '\n') {
-				//System.out.print("Received: " + new String(linebuf, 0, inp));
+				// System.out.print("Received: " + new String(linebuf, 0, inp));
 				int s = 0;
 				int j;
 				for (j = 0; j < m_BytesReceived - 2; j++)
